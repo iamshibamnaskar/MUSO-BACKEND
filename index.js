@@ -19,6 +19,7 @@ app.use(express.json());
  */
 app.get('/video', async (req, res) => {
     const { url } = req.query;
+    console.log(url)
 
     if (!url) {
         return res.status(400).json({ error: 'Video URL is required' });
@@ -26,9 +27,8 @@ app.get('/video', async (req, res) => {
 
     try {
         // Extract video ID from the URL and fetch video details
-        const video = await youtube.getVideo(url);
+        const video = await youtube.getVideo(`https://www.youtube.com/watch?v=${url}`);
         res.json({
-            id: video.id,
             title: video.title,
             duration: video.durationFormatted,
             views: video.views,
