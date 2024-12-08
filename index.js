@@ -28,6 +28,7 @@ app.get('/video', async (req, res) => {
     try {
         // Extract video ID from the URL and fetch video details
         const video = await youtube.getVideo(`https://www.youtube.com/watch?v=${url}`);
+        console.log(video)
         res.json({
             title: video.title,
             duration: video.durationFormatted,
