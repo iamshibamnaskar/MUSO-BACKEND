@@ -2,6 +2,7 @@
 const express = require('express');
 const youtube = require('youtube-sr').default;
 const cors = require('cors');
+const fetchVideoInfo = require('updated-youtube-info');
 
 // Initialize the Express app
 const app = express();
@@ -27,18 +28,13 @@ app.get('/video', async (req, res) => {
 
     try {
         // Extract video ID from the URL and fetch video details
-        const video = await youtube.getVideo(`https://www.youtube.com/watch?v=${url}`);
+        const video = await fetchVideoInfo(url);
         console.log(video)
         res.json({
             title: video.title,
-            duration: video.durationFormatted,
             views: video.views,
-            url: video.url,
-            thumbnail: video.thumbnail.url,
-            channel: {
-                name: video.channel.name,
-                url: video.channel.url,
-            },
+            id: video.videoId,
+            thumbnail: video.thumbnailUrl
         });
     } catch (error) {
         console.error(error);
