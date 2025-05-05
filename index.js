@@ -2,7 +2,7 @@
 const express = require('express');
 const youtube = require('youtube-sr').default;
 const cors = require('cors');
-const fetchVideoInfo = require('updated-youtube-info');
+const youtubesearchapi = require("youtube-search-api");
 
 // Initialize the Express app
 const app = express();
@@ -13,12 +13,8 @@ app.use(cors());
 // Middleware to parse JSON requests
 app.use(express.json());
 
-/**
- * GET /video
- * Fetch video details by URL
- * Query parameter: url (string)
- */
-app.get('/video', async (req, res) => {
+
+app.get('/getnext', async (req, res) => {
     const { url } = req.query;
     console.log(url)
 
@@ -27,15 +23,12 @@ app.get('/video', async (req, res) => {
     }
 
     try {
-        // Extract video ID from the URL and fetch video details
-        const video = await fetchVideoInfo(url);
-        console.log(video)
-        res.json({
-            title: video.title,
-            views: video.views,
-            id: video.videoId,
-            thumbnail: video.thumbnailUrl
-        });
+        data = await youtubesearchapi.GetVideoDetails(url)
+        var nexts = []
+        data.suggestion.map((elm)=>{
+            nexts.push(`https://www.youtube.com/watch?v=${elm.id}`)
+        })
+        res.json(nexts);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch video details. Please check the URL.' });
@@ -49,8 +42,21 @@ app.get('/video', async (req, res) => {
 app.get('/homepage', async (req, res) => {
     try {
         // Fetch trending videos based on search query
-        const videos = await youtube.search("trending song", { limit: 18 });
-        const formattedVideos = videos.map(video => ({
+        const videos1 = await youtube.search("trending song", { limit: 40 });
+        const videos2 = await youtube.search("Recent Hit song", { limit: 10 });
+        const formattedVideos = videos1.map(video => ({
+            id: video.id,
+            title: video.title,
+            duration: video.durationFormatted,
+            views: video.views,
+            url: video.url,
+            thumbnail: video.thumbnail.url,
+            channel: {
+                name: video.channel.name,
+                url: video.channel.url,
+            },
+        }));
+        const formattedVideos1 = videos2.map(video => ({
             id: video.id,
             title: video.title,
             duration: video.durationFormatted,
@@ -63,12 +69,15 @@ app.get('/homepage', async (req, res) => {
             },
         }));
 
-        res.json({ videos: formattedVideos });
+        const songs = formattedVideos1.concat(formattedVideos);
+
+        res.json({ videos: songs });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch homepage videos.' });
     }
 });
+
 
 
 app.get('/autocomplete', async (req, res) => {
